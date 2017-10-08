@@ -1,5 +1,9 @@
-function getVideo() {
-  return document.getElementsByTagName('video')[0];
+console.log("Start load webview-inject");
+function setVideo() {
+  console.log("setVideo");
+  window.vid = document.getElementsByTagName('video')[0];
+  if(window.vid==undefined) setTimeout(setVideo,5* 1000); //fix video is not ready on document ready
+  else initListener();
 }
 function initListener() {
   vid.addEventListener('timeupdate',function(e) { console.log('time:'+e.target.currentTime); })
@@ -7,9 +11,7 @@ function initListener() {
   vid.addEventListener('volumechange', function(e) { console.log('volume:'+e.target.volume) }, false);
 }
 
-window.vid = getVideo();
-
-initListener();
+setVideo();
 
 window.mediaControll = {
   start: function() {
@@ -40,3 +42,5 @@ window.mediaControll = {
     mediaControll.volume(vid.volume+vol);
   }
 }
+
+console.log("webview-inject is loaded");
