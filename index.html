@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+    <style>
+      body {
+        padding: 0 0 0 0;
+        margin: 0 0 0 0;
+        height: 100%;
+      }
+      h3 {
+        margin: 0 0 0 0;
+      }
+    </style>
+  </head>
+  <body onload="init()" onresize="resizeBody()">
+    <h3>Hello World!</h3>
+    <!-- We are using node <script>document.write(process.versions.node)</script>,
+Chrome <script>document.write(process.versions.chrome)</script>,
+and Electron <script>document.write(process.versions.electron)</script>. -->
+    <webview id="page" src="https://www.github.com/" style="display:inline-flex; width:100%; height:100%"></webview>
+    <script>
+    // In renderer process (web page).
+const {ipcRenderer} = require('electron')
+// console.log(ipcRenderer.sendSync('synchronous-message', 'ping')) // prints "pong"
+ipcRenderer.send('welcome')
+
+
+ipcRenderer.on('set-page',(event,url) => {
+  document.getElementById('page').src = url;
+  console.log(url);
+})
+
+ipcRenderer.on('getDuration',(event) => {
+  webview.executeJavaScript("console.log('duration:'+document.getElementsByTagName('video')[0].duration);")
+})
+ipcRenderer.on('getVolume',(event) => {
+  webview.executeJavaScript("console.log('volume:'+document.getElementsByTagName('video')[0].volume)")
+})
+
+
+ipcRenderer.on('media',(event,type,arg0) => {
+  let page = document.getElementById('page');
+  console.log(type,arg0);
+  if(type=='start') {
+    // page.executeJavaScript("document.getElementsByClassName('ytp-play-button')[0].click()");
+    page.executeJavaScript("document.getElementsByTagName('video')[0].paused?document.getElementsByTagName('video')[0].play():document.getElementsByTagName('video')[0].pause();",true)
+  } else if(type=='fullScreen') {
+    // page.webkitRequestFullScreen();
+    // page.executeJavaScript("document.getElementsByTagName('video')[0].play()",true)
+    // page.executeJavaScript('document.getElementsByTagName("video")[0].webkitRequestFullScreen()',true)
+    page.executeJavaScript("window.location.host=='www.youtube.com'?document.getElementsByClassName('ytp-fullscreen-button')[0].click():document.getElementsByTagName('video')[0].webkitRequestFullScreen()",true) //youtube
+    // page.executeJavaScript("document.getElementsByClassName('ytp-fullscreen-button')[0].click()");
+  } else if(type=='exitFullScreen') {
+    // page.executeJavaScript('document.getElementsByTagName("video")[0].webkitExitFullScreen()',true)
+    // page.executeJavaScript("document.getElementsByClassName('ytp-fullscreen-button')[0].click()",true) //youtube
+    page.executeJavaScript("window.location.host=='www.youtube.com'?document.getElementsByClassName('ytp-fullscreen-button')[0].click():document.getElementsByTagName('video')[0].webkitExitFullScreen()",true) //youtube
+  } else if(type=='mute') {
+    page.executeJavaScript("if(document.getElementsByTagName('video')[0].muted) document.getElementsByTagName('video')[0].muted=false; else document.getElementsByTagName('video')[0].muted=true;");
+  } else if(type=='setTime') {
+    // v.currentTime = 10
+    page.executeJavaScript("document.getElementsByTagName('video')[0].currentTime="+arg0,true);
+  } else if(type=='addTime') {
+    page.executeJavaScript("document.getElementsByTagName('video')[0].currentTime=(document.getElementsByTagName('video')[0].currentTime+"+arg0+")",true);
+  } else if(type=='skipAdYT') {
+    page.executeJavaScript("document.getElementsByClassName('videoAdUiSkipButton')[0].click()");
+  } else if(type=='volume' && arg0>=0 && arg0<=1) {
+    page.executeJavaScript("document.getElementsByTagName('video')[0].volume="+arg0)
+  } else if(type=='volumeAdd') {
+    page.executeJavaScript("document.getElementsByTagName('video')[0].volume=(document.getElementsByTagName('video')[0].volume+"+arg0+")%1")
+  }
+  // document.getElementById('page').executeJavaScript('console.log("jo")');
+})
+ipcRenderer.send('get-page')
+
+function resizeBody() {
+  document.getElementsByTagName('body')[0].style.height = (window.innerHeight-30)+'px';
+}
+let webview
+function init() {
+    resizeBody();
+
+    webview = document.querySelector('webview')
+    webview.addEventListener('console-message', (e) => {
+      // console.log('Guest page logged a message:', e.message)
+    })
+    startWebViewConn();
+}
+
+
+
+
+
+function startWebViewConn() {
+  let regTime = /time\:(.*)/
+  let regDuration = /duration\:(.*)/
+  let regVolume = /volume\:(.*)/
+
+  webview.addEventListener('console-message', (e) => {
+    // console.log(e.message);
+    if(regTime.test(e.message))
+      ipcRenderer.send('media-time',regTime.exec(e.message)[1])
+    else if(regDuration.test(e.message))
+      ipcRenderer.send('media-duration',regDuration.exec(e.message)[1])
+    else if(regVolume.test(e.message))
+      ipcRenderer.send('media-volume',regVolume.exec(e.message)[1])
+    // console.log('Time!', reg.exec(e.message)[1]);
+  })
+  webview.addEventListener('dom-ready',function(e) {
+    // webview.executeJavaScript("console.log('duration:'+document.getElementsByTagName('video')[0].duration);")
+    webview.executeJavaScript("document.getElementsByTagName('video')[0].addEventListener('timeupdate',function(e) { console.log('time:'+e.target.currentTime); })")
+
+    webview.executeJavaScript("document.getElementsByTagName('video')[0].addEventListener('loadeddata', function() {console.log('duration:'+document.getElementsByTagName('video')[0].duration);console.log('volume:'+document.getElementsByTagName('video')[0].volume)}, false);")
+    webview.executeJavaScript("document.getElementsByTagName('video')[0].addEventListener('volumechange', function() {console.log('volume:'+document.getElementsByTagName('video')[0].volume)}, false);")
+
+  });
+}
+
+    </script>
+  </body>
+</html>
