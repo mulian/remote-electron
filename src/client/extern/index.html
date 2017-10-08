@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hello World! Extern</title>
+  </head>
+  <body>
+    <h1>Hello World! Extern</h1>
+    <input id='url' type='text' onblur="saveUrl()">
+    <button onclick='mediaSend("start")'>Start/Pause</button>
+    <button onclick='mediaSend("fullScreen")'>fullScreen</button>
+    <button onclick='mediaSend("exitFullScreen")'>exitFullScreen</button>
+    <button onclick='mediaSend("mute")'>mute</button>
+    <button onclick='mediaSend("setTime",10)'>setTime</button>
+    <button onclick='mediaSend("addTime",-5)'>-5sec</button>
+    <button onclick='mediaSend("addTime",+5)'>+5sec</button>
+    <button onclick='mediaSend("volumeAdd",+0.1)'>VolUp</button>
+    <button onclick='mediaSend("volumeAdd",-0.1)'>VolDown</button>
+    <button onclick='mediaSend("skipAdYT")'>YouTube Skip AD</button>
+
+    <input id='wPath' type='text' onblur="setWedevine('cdm-path')" value='/Applications/Google\ Chrome.app/Contents/Versions/61.0.3163.91/Google\ Chrome\ Framework.framework/Versions/A/Libraries/WidevineCdm/_platform_specific/mac_x64/widevinecdmadapter.plugin'>
+    <input id='wVersion' type='text' onblur="setWedevine('cdm-version')" value='1.4.8.1008'>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+      console.log(socket);
+      socket.on('connection', function(socket){
+        console.log('a user connected');
+      });
+      socket.on('media-info', function(e){
+        console.log(e.type+"!"+e.value);
+      });
+
+
+      function saveUrl(e) {
+        let url = document.getElementById('url');
+        // console.log(url.value);
+        socket.emit('url-change',url.value);
+      }
+
+      function mediaSend(str,arg0) {
+        socket.emit('media',str,arg0);
+      }
+      function setWedevine(type) {
+        let arg0
+        if(type=="cdm-path") arg0=document.getElementById('wPath').value
+        else if(type=="cdm-version") arg0=document.getElementById('wVersion').value
+
+        socket.emit('widevine',type,arg0)
+      }
+    </script>
+  </body>
+</html>
