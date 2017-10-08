@@ -11,8 +11,6 @@ const {setEvent} = require('./extern-server.js')
 
 let evnt
 ipcMain.on('welcome', (event, arg) => {
-  // console.log(arg)  // prints "ping"
-  // event.sender.send('asynchronous-reply', 'pong')
   console.log("welcome!");
   setEvent(event);
   evnt = event
@@ -31,9 +29,9 @@ ipcMain.on('get-page', (event, arg) => {
 // be closed automatically when the JavaScript object is garbage collected.
 let win
 
-app.commandLine.appendSwitch('widevine-cdm-path', '/Applications/Google\ Chrome.app/Contents/Versions/61.0.3163.91/Google\ Chrome\ Framework.framework/Versions/A/Libraries/WidevineCdm/_platform_specific/mac_x64/widevinecdmadapter.plugin')
+// app.commandLine.appendSwitch('widevine-cdm-path', '/Applications/Google\ Chrome.app/Contents/Versions/61.0.3163.91/Google\ Chrome\ Framework.framework/Versions/A/Libraries/WidevineCdm/_platform_specific/mac_x64/widevinecdmadapter.plugin')
 // The version of plugin can be got from `chrome://plugins` page in Chrome.
-app.commandLine.appendSwitch('widevine-cdm-version', '1.4.8.1008')
+// app.commandLine.appendSwitch('widevine-cdm-version', '1.4.8.1008')
 
 function createWindow () {
   // Create the browser window.
